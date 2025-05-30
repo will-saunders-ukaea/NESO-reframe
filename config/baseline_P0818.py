@@ -39,7 +39,7 @@ site_configuration = {
             "cxx": "g++",
             "features": [],
             "extras": {
-                "spec" : "neso%gcc ^openblas ^nektar ^adaptivecpp compilationflow=ompaccelerated",
+                "spec": "neso%gcc ^openblas ^nektar ^adaptivecpp compilationflow=ompaccelerated",
                 "NUM_BUILD_WORKERS": 16,
                 "NUM_MPI_RANKS": 8,
                 "env_vars": {
@@ -47,9 +47,7 @@ site_configuration = {
                     "NESO_PARTICLES_DEVICE_AWARE_MPI": "ON",
                 },
             },
-            "modules": [
-                "reframe/NP-acpp-llvm-cuda",
-            ],
+            "modules": [],
         },
     ],
 }

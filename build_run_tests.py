@@ -25,10 +25,7 @@ class NESOSpackEnvBuildRun(rfm.RegressionTest):
     spack_config_yaml = subprocess.check_output(
         (spack_exe + " config get config").split()
     ).decode(sys.stdout.encoding)
-    print(spack_config_yaml)
     spack_config = yaml.safe_load(spack_config_yaml)
-    print(spack_config)
-    print(spack_config["config"]["install_tree"]["root"])
     spack_install_tree = spack_config["config"]["install_tree"]["root"]
 
     @run_before("compile")
@@ -49,4 +46,3 @@ class NESOSpackEnvBuildRun(rfm.RegressionTest):
     @sanity_function
     def validate_build(self):
         return True  # TODO
-
