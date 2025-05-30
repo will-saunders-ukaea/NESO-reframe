@@ -7,19 +7,20 @@ site_configuration = {
                 "P0818",
             ],
             "modules_system": "tmod4",
-            "max_local_jobs": 2,
+            "max_local_jobs": 1,
             "stagedir": "/tmp/reframe",
             "partitions": [
                 {
-                    "max_jobs": 2,
+                    "max_jobs": 1,
                     "name": "default",
                     "descr": "Example partition",
                     "scheduler": "local",
                     "launcher": "mpirun",
                     "environs": [
-                        "acpp_omp_library_only",
+                        "acpp_ompaccelerated",
                     ],
                     "prepare_cmds": [
+                        "source ~/venvs/spack/v0.23",
                         "source /etc/profile.d/modules.sh",
                         "export CL_CONFIG_CPU_TARGET_ARCH=corei7-avx",
                         "export ACPP_ADAPTIVITY_LEVEL=0",
@@ -32,17 +33,13 @@ site_configuration = {
     ],
     "environments": [
         {
-            "name": "acpp_omp_library_only",
+            "name": "acpp_ompaccelerated",
             "features": ["sycl"],
             "cc": "gcc",
             "cxx": "g++",
             "features": [],
             "extras": {
-                "cmake_configuration": [
-                    "-DNESO_PARTICLES_SINGLE_COMPILED_LOOP=ON",
-                    "-DACPP_TARGETS=omp.library-only",
-                    "-DCMAKE_BUILD_TYPE=Release",
-                ],
+                "spec" : "neso%gcc ^openblas ^nektar ^adaptivecpp compilationflow=ompaccelerated",
                 "NUM_BUILD_WORKERS": 16,
                 "NUM_MPI_RANKS": 8,
                 "env_vars": {
