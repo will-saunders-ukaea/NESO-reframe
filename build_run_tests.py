@@ -12,14 +12,16 @@ SOURCES_DIR = os.path.join(
     "NESO-reframe-stage",
 )
 
+
 def make_path_to_env(reframe_env):
     return os.path.join(os.path.dirname(__file__), reframe_env)
 
-class NESOunitTestsBuild(rfm.CompileOnlyRegressionTest):
+
+class NESOTestsBuild(rfm.CompileOnlyRegressionTest):
     sourcesdir = SOURCES_DIR
     build_system = "CMake"
-    executable = os.path.join("test", "unitTests")
     build_locally = False
+    executable = os.path.join("test", "unitTests")
 
     @run_before("compile")
     def prepare_build(self):
@@ -29,9 +31,14 @@ class NESOunitTestsBuild(rfm.CompileOnlyRegressionTest):
 
         env_path = make_path_to_env(self.current_environ.extras["REFRAME_ENV"])
         self.env_vars["REFRAME_ENV"] = env_path
-        self.build_system.make_opts += ["unitTests"]
-        
-        ## there must be a better way to do this
+        self.build_system.make_opts += [
+            "unitTests",
+            "integrationTests",
+            "solverIntegrationTests",
+        ]
+
+        # There must be a better way to do this that does not modify a
+        # protected variable.
         self.current_environ._prepare_cmds += [
             f"echo 'activating env' {env_path}",
             f"spack env activate -d {env_path}",
@@ -41,12 +48,17 @@ class NESOunitTestsBuild(rfm.CompileOnlyRegressionTest):
 
     @sanity_function
     def validate_build(self):
-        return os.path.exists(self.executable)
+        return (
+            os.path.exists(self.executable)
+            and os.path.exists(os.path.join("test", "integrationTests"))
+            and os.path.exists(
+                os.path.join("solvers", "test", "solverIntegrationTests")
+            )
+        )
 
 
-@rfm.simple_test
-class NESOunitTestsTest(rfm.RunOnlyRegressionTest):
-    test_binaries = fixture(NESOunitTestsBuild, scope="environment")
+class NESOTest(rfm.RunOnlyRegressionTest):
+    test_binaries = fixture(NESOTestsBuild, scope="environment")
     valid_systems = ["NESOReframe"]
     valid_prog_environs = ["*"]
     build_locally = False
@@ -55,7 +67,9 @@ class NESOunitTestsTest(rfm.RunOnlyRegressionTest):
     @run_before("run")
     def setup_omp_env(self):
         self.executable = os.path.join(
-            self.test_binaries.stagedir, "test", "unitTests"
+            self.test_binaries.stagedir,
+            self.test_dir,
+            self.test_name,
         )
         procinfo = self.current_partition.processor
         self.num_tasks = self.current_environ.extras["NUM_MPI_RANKS"]
@@ -65,6 +79,26 @@ class NESOunitTestsTest(rfm.RunOnlyRegressionTest):
 
     @sanity_function
     def validate_solution(self):
-        return sn.assert_not_found(r"FAILED", self.stdout) and sn.assert_not_found(
-            r"SKIPPED", self.stdout
-        ) and sn.assert_not_found(r"Assertion error", self.stderr)
+        return (
+            sn.assert_not_found(r"FAILED", self.stdout)
+            and sn.assert_not_found(r"SKIPPED", self.stdout)
+            and sn.assert_not_found(r"Assertion error", self.stderr)
+        )
+
+
+@rfm.simple_test
+class NESOunitTestsTest(NESOTest):
+    test_name = "unitTests"
+    test_dir = "test"
+
+
+@rfm.simple_test
+class NESOintegrationTestsTest(NESOTest):
+    test_name = "integrationTests"
+    test_dir = "test"
+
+
+@rfm.simple_test
+class NESOsolverTestsTest(NESOTest):
+    test_name = "solverIntegrationTests"
+    test_dir = os.path.join("solvers", "test")

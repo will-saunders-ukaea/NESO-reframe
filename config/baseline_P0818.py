@@ -7,11 +7,11 @@ site_configuration = {
                 "P0818",
             ],
             "modules_system": "tmod4",
-            "max_local_jobs": 1,
+            "max_local_jobs": 2,
             "stagedir": "/tmp/reframe",
             "partitions": [
                 {
-                    "max_jobs": 1,
+                    "max_jobs": 2,
                     "name": "default",
                     "descr": "Example partition",
                     "scheduler": "local",
