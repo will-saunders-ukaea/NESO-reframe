@@ -17,7 +17,7 @@ site_configuration = {
                     "scheduler": "local",
                     "launcher": "mpirun",
                     "environs": [
-                        "acpp_ompaccelerated",
+                        "acpp_omp_accelerated",
                     ],
                     "prepare_cmds": [
                         "source ~/venvs/spack/v0.23",
@@ -33,15 +33,15 @@ site_configuration = {
     ],
     "environments": [
         {
-            "name": "acpp_ompaccelerated",
+            "name": "acpp_omp_accelerated",
             "features": ["sycl"],
             "cc": "gcc",
             "cxx": "g++",
             "features": [],
             "extras": {
-                "spec": "neso%gcc ^openblas ^nektar ^adaptivecpp compilationflow=ompaccelerated",
-                "NUM_BUILD_WORKERS": 16,
+                "NUM_BUILD_WORKERS": 32,
                 "NUM_MPI_RANKS": 8,
+                "REFRAME_ENV": "acpp-omp-accelerated",
                 "env_vars": {
                     "OMP_NUM_THREADS": 2,
                     "NESO_PARTICLES_DEVICE_AWARE_MPI": "ON",

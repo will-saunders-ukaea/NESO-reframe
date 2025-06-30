@@ -12,37 +12,59 @@ SOURCES_DIR = os.path.join(
     "NESO-reframe-stage",
 )
 
+def make_path_to_env(reframe_env):
+    return os.path.join(os.path.dirname(__file__), reframe_env)
 
-@rfm.simple_test
-class NESOSpackEnvBuildRun(rfm.RegressionTest):
-    valid_systems = ["NESOReframe"]
-    valid_prog_environs = ["*"]
+class NESOunitTestsBuild(rfm.CompileOnlyRegressionTest):
     sourcesdir = SOURCES_DIR
-    build_system = "Spack"
+    build_system = "CMake"
+    executable = os.path.join("test", "unitTests")
     build_locally = False
 
-    spack_exe = shutil.which("spack")
-    spack_config_yaml = subprocess.check_output(
-        (spack_exe + " config get config").split()
-    ).decode(sys.stdout.encoding)
-    spack_config = yaml.safe_load(spack_config_yaml)
-    spack_install_tree = spack_config["config"]["install_tree"]["root"]
-
     @run_before("compile")
-    def setup_build_system(self):
-        # Add the existing spack directory as upstream to avoid rebuilding
-        self.build_system.config_opts.append(
-            f"upstreams:host:install_tree:{self.spack_install_tree}"
-        )
-
-        # define the spec reframe should add
-        self.build_system.specs = [self.current_environ.extras["spec"]]
-
-        # set the number of build workers
+    def prepare_build(self):
         self.build_system.max_concurrency = self.current_environ.extras[
             "NUM_BUILD_WORKERS"
         ]
 
+        env_path = make_path_to_env(self.current_environ.extras["REFRAME_ENV"])
+        self.env_vars["REFRAME_ENV"] = env_path
+        self.build_system.make_opts += ["unitTests"]
+        
+        ## there must be a better way to do this
+        self.current_environ._prepare_cmds += [
+            f"echo 'activating env' {env_path}",
+            f"spack env activate -d {env_path}",
+            "spack install --only dependencies",
+            "spack env view regenerate",
+        ]
+
     @sanity_function
     def validate_build(self):
-        return True  # TODO
+        return os.path.exists(self.executable)
+
+
+@rfm.simple_test
+class NESOunitTestsTest(rfm.RunOnlyRegressionTest):
+    test_binaries = fixture(NESOunitTestsBuild, scope="environment")
+    valid_systems = ["NESOReframe"]
+    valid_prog_environs = ["*"]
+    build_locally = False
+    sourcesdir = SOURCES_DIR
+
+    @run_before("run")
+    def setup_omp_env(self):
+        self.executable = os.path.join(
+            self.test_binaries.stagedir, "test", "unitTests"
+        )
+        procinfo = self.current_partition.processor
+        self.num_tasks = self.current_environ.extras["NUM_MPI_RANKS"]
+        self.num_cpus_per_task = procinfo.num_cores
+        self.env_vars = {}
+        self.env_vars.update(self.current_environ.extras["env_vars"])
+
+    @sanity_function
+    def validate_solution(self):
+        return sn.assert_not_found(r"FAILED", self.stdout) and sn.assert_not_found(
+            r"SKIPPED", self.stdout
+        ) and sn.assert_not_found(r"Assertion error", self.stderr)
