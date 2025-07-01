@@ -69,6 +69,7 @@ site_configuration = {
             "modules": [
                 # fixes the sycl-ls not working with spack
                 "intel-oneapi-compilers/2024.2.1-gcc-13.2.0-j6iedmj",
+                "intel-oneapi-mpi/2021.14.0-oneapi-2024.2.1-pzfb27j",
             ],
         },
     ],
