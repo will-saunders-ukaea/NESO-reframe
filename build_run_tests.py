@@ -25,9 +25,10 @@ class NESOTestsBuild(rfm.CompileOnlyRegressionTest):
 
     @run_before("compile")
     def prepare_build(self):
-        self.build_system.max_concurrency = self.current_environ.extras[
+        num_build_workers = self.current_environ.extras[
             "NUM_BUILD_WORKERS"
         ]
+        self.build_system.max_concurrency = int(num_build_workers)
 
         env_path = make_path_to_env(self.current_environ.extras["REFRAME_ENV"])
         self.env_vars["REFRAME_ENV"] = env_path
@@ -42,7 +43,7 @@ class NESOTestsBuild(rfm.CompileOnlyRegressionTest):
         self.current_environ._prepare_cmds += [
             f"echo 'activating env' {env_path}",
             f"spack env activate -d {env_path}",
-            "spack install --only dependencies",
+            f"spack install --only dependencies -j {num_build_workers}",
             "spack env view regenerate",
         ]
 
