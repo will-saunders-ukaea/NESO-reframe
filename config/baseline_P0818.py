@@ -18,6 +18,7 @@ site_configuration = {
                     "launcher": "mpirun",
                     "environs": [
                         "acpp_omp_accelerated",
+                        "acpp_cuda_llvm",
                         "intel-oneapi",
                     ],
                     "prepare_cmds": [
@@ -71,6 +72,22 @@ site_configuration = {
                 "intel-oneapi-compilers/2024.2.1-gcc-13.2.0-j6iedmj",
                 "intel-oneapi-mpi/2021.14.0-oneapi-2024.2.1-pzfb27j",
             ],
+        },
+        {
+            "name": "acpp_cuda_llvm",
+            "features": ["sycl"],
+            "cc": "gcc",
+            "cxx": "g++",
+            "features": [],
+            "extras": {
+                "NUM_BUILD_WORKERS": 24,
+                "NUM_MPI_RANKS": 4,
+                "REFRAME_ENV": "acpp-cuda-llvm",
+                "env_vars": {
+                    "OMP_NUM_THREADS": 2,
+                },
+            },
+            "modules": [],
         },
     ],
 }
