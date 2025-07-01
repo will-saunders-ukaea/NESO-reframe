@@ -8,7 +8,7 @@ site_configuration = {
             ],
             "modules_system": "tmod4",
             "max_local_jobs": 2,
-            "stagedir": "/tmp/reframe",
+            "stagedir": "/dev/shm/reframe",
             "partitions": [
                 {
                     "max_jobs": 2,
@@ -19,7 +19,7 @@ site_configuration = {
                     "environs": [
                         "acpp_omp_accelerated",
                         "acpp_cuda_llvm",
-                        "intel-oneapi",
+                        "dpcpp",
                     ],
                     "prepare_cmds": [
                         "source ~/venvs/spack/v0.23",
@@ -52,7 +52,7 @@ site_configuration = {
             "modules": [],
         },
         {
-            "name": "intel-oneapi",
+            "name": "dpcpp",
             "features": ["sycl"],
             "cc": "icx",
             "cxx": "icpx",
